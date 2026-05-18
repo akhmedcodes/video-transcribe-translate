@@ -22,8 +22,19 @@ log = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "base")  # tiny/base/small/medium/large
 
+_raw_allowed = os.getenv("ALLOWED_USERS", "").strip()
+ALLOWED_USERS: set[int] = (
+    {int(uid) for uid in _raw_allowed.split(",") if uid.strip().isdigit()}
+    if _raw_allowed else set()
+)
+
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN is not set in .env")
+
+if ALLOWED_USERS:
+    log.info("Private mode: %d allowed user(s): %s", len(ALLOWED_USERS), ALLOWED_USERS)
+else:
+    log.info("Public mode: all users allowed")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
@@ -54,6 +65,10 @@ def _translate(text: str, source_lang: str) -> str:
     lang_map = {"ru": "ru", "en": "en"}
     src = lang_map.get(source_lang, "auto")
     return GoogleTranslator(source=src, target="uz").translate(text)
+
+
+def is_allowed(user_id: int) -> bool:
+    return not ALLOWED_USERS or user_id in ALLOWED_USERS
 
 
 async def run_in_thread(func, *args):
@@ -120,6 +135,9 @@ async def process_video(message: types.Message, file_id: str, file_name: str = "
 
 @dp.message_handler(commands=["start", "help"])
 async def cmd_start(message: types.Message):
+    if not is_allowed(message.from_user.id):
+        await message.reply("⛔ Sizda ushbu botdan foydalanish huquqi yo'q.")
+        return
     await message.reply(
         "👋 Salom! Men video → matn → o'zbek tili tarjimachisiman.\n\n"
         "📹 Video yuboring (MP4), men:\n"
@@ -132,16 +150,25 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(content_types=types.ContentType.VIDEO)
 async def handle_video(message: types.Message):
+    if not is_allowed(message.from_user.id):
+        await message.reply("⛔ Sizda ushbu botdan foydalanish huquqi yo'q.")
+        return
     await process_video(message, message.video.file_id, "video")
 
 
 @dp.message_handler(content_types=types.ContentType.VIDEO_NOTE)
 async def handle_video_note(message: types.Message):
+    if not is_allowed(message.from_user.id):
+        await message.reply("⛔ Sizda ushbu botdan foydalanish huquqi yo'q.")
+        return
     await process_video(message, message.video_note.file_id, "videonote")
 
 
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def handle_document(message: types.Message):
+    if not is_allowed(message.from_user.id):
+        await message.reply("⛔ Sizda ushbu botdan foydalanish huquqi yo'q.")
+        return
     doc = message.document
     mime = doc.mime_type or ""
     if "video" in mime or (doc.file_name or "").lower().endswith(".mp4"):
