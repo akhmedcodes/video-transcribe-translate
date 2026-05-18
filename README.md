@@ -1,23 +1,23 @@
 # Video Transcribe & Translate Bot
 
-Telegram bot: video yuborasiz — matn olinadi va o'zbekchaga tarjima qilinadi.
+A Telegram bot that receives a video, extracts the audio, transcribes speech to text, and translates it into Uzbek.
 
-**Pipeline:** MP4 video → MP3 audio → Matn (RU/EN) → O'zbekcha tarjima
-
----
-
-## Imkoniyatlar
-
-- Video, doiraviy video va hujjat sifatida yuborilgan MP4 fayllarni qabul qiladi
-- Ovozni avtomatik ravishda **Rus** yoki **Ingliz** tilida taniydi
-- Matnni **O'zbek** tiliga tarjima qiladi
-- `ALLOWED_USERS` orqali foydalanuvchilarni cheklash imkoniyati (shaxsiy/ommaviy rejim)
+**Pipeline:** MP4 video → MP3 audio → Text (RU/EN) → Uzbek translation
 
 ---
 
-## Talab qilinadigan muhit
+## Features
 
-| Komponent | Versiya |
+- Accepts video, round video (video note), and MP4 files sent as documents
+- Auto-detects **Russian** or **English** speech
+- Translates transcribed text into **Uzbek**
+- Optional user whitelist via `ALLOWED_USERS` (private or public mode)
+
+---
+
+## Requirements
+
+| Component | Version |
 |-----------|---------|
 | OS | Ubuntu 22.04 LTS |
 | Python | 3.10 |
@@ -25,38 +25,38 @@ Telegram bot: video yuborasiz — matn olinadi va o'zbekchaga tarjima qilinadi.
 
 ---
 
-## O'rnatish
+## Installation
 
-### 1. Repozitoriyani klonlash
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/akhmedcodes/video-transcribe-translate.git
 cd video-transcribe-translate
 ```
 
-### 2. Avtomatik o'rnatish
+### 2. Run the deploy script
 
 ```bash
 python3 deploy.py
 ```
 
-`deploy.py` quyidagilarni bajaradi:
-- `ffmpeg` ni `apt` orqali o'rnatadi
-- `venv/` virtual muhitini yaratadi
-- `requirements.txt` dagi barcha paketlarni o'rnatadi
-- `.env.example` dan `.env` faylini yaratadi
+`deploy.py` automatically:
+- Installs `ffmpeg` via `apt`
+- Creates a `venv/` virtual environment
+- Installs all packages from `requirements.txt`
+- Copies `.env.example` → `.env`
 
-### 3. Bot tokenini sozlash
+### 3. Set your bot token
 
-`.env` faylini oching va `BOT_TOKEN` ni to'ldiring:
+Open `.env` and fill in your `BOT_TOKEN`:
 
 ```env
 BOT_TOKEN=your_telegram_bot_token_here
 ```
 
-> Token olish uchun Telegram'da [@BotFather](https://t.me/BotFather) ga murojaat qiling.
+> Get a token from [@BotFather](https://t.me/BotFather) on Telegram.
 
-### 4. Botni ishga tushirish
+### 4. Run the bot
 
 ```bash
 venv/bin/python bot.py
@@ -64,59 +64,59 @@ venv/bin/python bot.py
 
 ---
 
-## Konfiguratsiya (`.env`)
+## Configuration (`.env`)
 
-| Kalit | Majburiy | Tavsif |
-|-------|----------|--------|
-| `BOT_TOKEN` | Ha | BotFather dan olingan token |
-| `WHISPER_MODEL` | Yo'q | Whisper model o'lchami (default: `base`) |
-| `ALLOWED_USERS` | Yo'q | Ruxsat berilgan foydalanuvchi IDlari (vergul bilan) |
+| Key | Required | Description |
+|-----|----------|-------------|
+| `BOT_TOKEN` | Yes | Token from BotFather |
+| `WHISPER_MODEL` | No | Whisper model size (default: `base`) |
+| `ALLOWED_USERS` | No | Comma-separated Telegram user IDs |
 
-### `WHISPER_MODEL` tanlash
+### `WHISPER_MODEL` options
 
-| Model | RAM | Tezlik | Aniqlik |
-|-------|-----|--------|---------|
-| `tiny` | ~1 GB | Eng tez | Past |
-| `base` | ~1 GB | Tez | Yaxshi ✓ |
-| `small` | ~2 GB | O'rta | Yaxshiroq |
-| `medium` | ~5 GB | Sekin | A'lo |
-| `large` | ~10 GB | Eng sekin | Eng yuqori |
+| Model | RAM | Speed | Accuracy |
+|-------|-----|-------|----------|
+| `tiny` | ~1 GB | Fastest | Low |
+| `base` | ~1 GB | Fast | Good ✓ |
+| `small` | ~2 GB | Medium | Better |
+| `medium` | ~5 GB | Slow | Great |
+| `large` | ~10 GB | Slowest | Best |
 
-### `ALLOWED_USERS` — kirish huquqini cheklash
+### `ALLOWED_USERS` — access control
 
 ```env
-# Faqat ko'rsatilgan foydalanuvchilarga ruxsat (shaxsiy rejim)
+# Private mode — only listed users can use the bot
 ALLOWED_USERS=123456789,987654321
 
-# Bo'sh qoldirilsa — bot ommaviy (hamma foydalana oladi)
+# Public mode — anyone can use the bot (leave empty)
 ALLOWED_USERS=
 ```
 
-> O'z Telegram ID raqamingizni bilish uchun [@userinfobot](https://t.me/userinfobot) ga yozing.
+> Find your Telegram user ID by messaging [@userinfobot](https://t.me/userinfobot).
 
 ---
 
-## Foydalanish
+## Usage
 
-1. Botga MP4 video yuboring (max 20 MB)
-2. Bot videoni qayta ishlaydi va quyidagilarni yuboradi:
-   - Aniqlangan til
-   - Asl matn (RU yoki EN)
-   - O'zbekcha tarjima
+1. Send an MP4 video to the bot (max 20 MB)
+2. The bot processes it and replies with:
+   - Detected language
+   - Original transcribed text (RU or EN)
+   - Uzbek translation
 
 ---
 
-## Texnologiyalar
+## Tech Stack
 
-| Kutubxona | Maqsad |
-|-----------|--------|
+| Library | Purpose |
+|---------|---------|
 | [aiogram 2.25.1](https://github.com/aiogram/aiogram) | Telegram Bot API |
-| [openai-whisper](https://github.com/openai/whisper) | Nutqni matnga aylantirish |
-| [deep-translator](https://github.com/nidhaloff/deep-translator) | Matnni tarjima qilish |
-| ffmpeg | MP4 → MP3 konvertatsiya |
+| [openai-whisper](https://github.com/openai/whisper) | Speech-to-text |
+| [deep-translator](https://github.com/nidhaloff/deep-translator) | Text translation |
+| ffmpeg | MP4 → MP3 conversion |
 
 ---
 
-## Litsenziya
+## License
 
 MIT
